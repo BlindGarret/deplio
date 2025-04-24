@@ -1,0 +1,26 @@
+### Deplio configuration file ###
+# This file is used to configure Deplio.
+# The configuration file is in TOML format.
+# You can find the documentation for TOML here: https://toml.io/en/
+# The configuration file is divided into sections, each section is defined by a header.
+# The sections are:
+# [defaults] - Default options for projects
+# [debug] - Debug options which are helpful for development
+
+# All values are optional, if a value is not set, the default value will be used.
+
+[defaults]
+### The default host name for the deplio server to use for a new project.
+# deplio_server = "https://your.deplio.server"
+
+### The default project name to use when creating a new project.
+# app_name = "your_app_name"
+
+### the default owner name to use when creating a new project.
+# owner = "your_owner_name"
+
+[debug]
+### This is used to redirect your working directory to a different location.
+### Useful for when developing on the CLI and wanting to run the cli with cargo commands,
+### but not wanting to actually start intializing the local directory as a project.
+# synth_working_dir = "~/deplio_dev"
