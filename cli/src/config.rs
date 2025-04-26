@@ -3,12 +3,27 @@ use dirs;
 use serde::Deserialize;
 use std::{env, fs, process};
 
-pub fn handle_command(edit: &bool) -> Result<(), &'static str> {
+const DEPLIO_CONFIG_FILE_NAME: &str = ".deplio";
+
+#[derive(Debug)]
+pub enum ConfigurationError {
+    HomeDirNotFound,
+    FileReadFail(String),
+    DeserializationFail(String),
+}
+
+pub fn handle_command(edit: &bool, overwrite: &bool) -> Result<(), &'static str> {
     let home_dir = dirs::home_dir().expect("Unable to find home directory");
-    let config_path = home_dir.join(".deplio");
+    let config_path = home_dir.join(DEPLIO_CONFIG_FILE_NAME);
     match fs::exists(&config_path) {
         Ok(true) => {
-            println!("Configuration already exists at: {:?}", config_path);
+            if *overwrite {
+                fs::remove_file(&config_path).expect("Unable to delete old configuration file");
+                fs::write(&config_path, CONFIG_TEMPLATE)
+                    .expect("Unable to create configuration file");
+            } else {
+                println!("Configuration already exists at: {:?}", config_path);
+            }
         }
         Ok(false) => {
             fs::write(&config_path, CONFIG_TEMPLATE).expect("Unable to create configuration file");
@@ -36,14 +51,36 @@ pub fn handle_command(edit: &bool) -> Result<(), &'static str> {
     Ok(())
 }
 
-#[derive(Deserialize)]
-struct Configuration {
+pub fn load_config() -> Result<Configuration, ConfigurationError> {
+    let home_dir = dirs::home_dir().ok_or(ConfigurationError::HomeDirNotFound)?;
+    let config_path = home_dir.join(DEPLIO_CONFIG_FILE_NAME);
+    let contents = fs::read_to_string(config_path);
+    if let Err(err) = &contents {
+        return Err(ConfigurationError::FileReadFail(err.to_string()));
+    }
+
+    match toml::from_str::<Configuration>(&contents.unwrap()) {
+        Ok(config) => Ok(config),
+        Err(err) => Err(ConfigurationError::DeserializationFail(
+            err.message().to_string(),
+        )),
+    }
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Configuration {
     defaults: Defaults,
     debug: Debug,
 }
 
-#[derive(Deserialize)]
-struct Defaults {}
+#[derive(Deserialize, Debug)]
+pub struct Defaults {
+    deplio_server: Option<String>,
+    owner: Option<String>,
+}
 
-#[derive(Deserialize)]
-struct Debug {}
+#[derive(Deserialize, Debug)]
+pub struct Debug {
+    synth_working_dir: Option<String>,
+    override_params: Option<String>,
+}

@@ -25,6 +25,12 @@ pub enum Commands {
             help = "Open the configuration file in the default editor"
         )]
         edit: bool,
+        #[arg(
+            short,
+            long,
+            help = "Forces the overwrite of the config file with a new empty template"
+        )]
+        overwrite: bool,
     },
     #[command(
         about = "Initializes the project files for a given repository using the latest version"

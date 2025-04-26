@@ -5,12 +5,16 @@ use cli::{
 };
 
 fn main() {
+    let conf = config::load_config();
+    println!("{:?}", conf);
     let cli = Cli::parse();
 
     match &cli.command {
         Some(Commands::Init { app_name, owner }) => init::handle_command(app_name, owner),
         Some(Commands::Update { version }) => {}
-        Some(Commands::Config { edit }) => wrap_error(config::handle_command(edit)),
+        Some(Commands::Config { edit, overwrite }) => {
+            wrap_error(config::handle_command(edit, overwrite))
+        }
         Some(Commands::Debug(_)) => {}
         None => {
             let mut cmd = Cli::command();

@@ -13,9 +13,6 @@
 ### The default host name for the deplio server to use for a new project.
 # deplio_server = "https://your.deplio.server"
 
-### The default project name to use when creating a new project.
-# app_name = "your_app_name"
-
 ### the default owner name to use when creating a new project.
 # owner = "your_owner_name"
 
@@ -24,3 +21,8 @@
 ### Useful for when developing on the CLI and wanting to run the cli with cargo commands,
 ### but not wanting to actually start intializing the local directory as a project.
 # synth_working_dir = "~/deplio_dev"
+
+### This is used to override params for the cli. Good for testing and debugging where injecting params
+### can be complicated
+### This will be parsed like a POSIX shell would handle args.
+# override_params = "some params"
