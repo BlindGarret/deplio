@@ -8,6 +8,7 @@ const DEPLIO_CONFIG_FILE_NAME: &str = ".deplio";
 #[derive(Debug)]
 pub enum ConfigurationError {
     HomeDirNotFound,
+    IoFail(String),
     FileReadFail(String),
     DeserializationFail(String),
 }
@@ -54,6 +55,23 @@ pub fn handle_command(edit: &bool, overwrite: &bool) -> Result<(), &'static str>
 pub fn load_config() -> Result<Configuration, ConfigurationError> {
     let home_dir = dirs::home_dir().ok_or(ConfigurationError::HomeDirNotFound)?;
     let config_path = home_dir.join(DEPLIO_CONFIG_FILE_NAME);
+    let config_exists = fs::exists(&config_path);
+    match config_exists {
+        Ok(true) => (),
+        Ok(false) => {
+            return Ok(Configuration {
+                debug: Debug {
+                    synth_working_dir: None,
+                    override_params: None,
+                },
+                defaults: Defaults {
+                    deplio_server: None,
+                    owner: None,
+                },
+            });
+        }
+        Err(e) => return Err(ConfigurationError::IoFail(e.to_string())),
+    }
     let contents = fs::read_to_string(config_path);
     if let Err(err) = &contents {
         return Err(ConfigurationError::FileReadFail(err.to_string()));
@@ -69,18 +87,18 @@ pub fn load_config() -> Result<Configuration, ConfigurationError> {
 
 #[derive(Deserialize, Debug)]
 pub struct Configuration {
-    defaults: Defaults,
-    debug: Debug,
+    pub defaults: Defaults,
+    pub debug: Debug,
 }
 
 #[derive(Deserialize, Debug)]
 pub struct Defaults {
-    deplio_server: Option<String>,
-    owner: Option<String>,
+    pub deplio_server: Option<String>,
+    pub owner: Option<String>,
 }
 
 #[derive(Deserialize, Debug)]
 pub struct Debug {
-    synth_working_dir: Option<String>,
-    override_params: Option<String>,
+    pub synth_working_dir: Option<String>,
+    pub override_params: Option<String>,
 }
