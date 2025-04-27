@@ -22,6 +22,11 @@ fn main() {
         cli = Cli::parse();
     }
 
+    if conf.debug.synth_working_dir.is_some() {
+        std::env::set_current_dir(conf.debug.synth_working_dir.unwrap())
+            .expect("Unable to set working dir to synthetic working dir");
+    }
+
     match &cli.command {
         Some(Commands::Init { app_name, owner }) => init::handle_command(app_name, owner),
         Some(Commands::Update { version }) => {}
