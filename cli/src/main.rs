@@ -5,7 +5,7 @@ use cli::{
 };
 
 fn main() {
-    let conf = config::load_config().expect("unable to load configuration");
+    let conf = config::load_config(None).expect("unable to load configuration");
     let cli: Cli;
     if conf.debug.override_params.is_some() {
         let dev_params = shlex::split(&conf.debug.override_params.unwrap());
@@ -31,7 +31,7 @@ fn main() {
         Some(Commands::Init { app_name, owner }) => init::handle_command(app_name, owner),
         Some(Commands::Update { version }) => {}
         Some(Commands::Config { edit, overwrite }) => {
-            wrap_error(config::handle_command(edit, overwrite))
+            wrap_error(config::handle_command(edit, overwrite, None))
         }
         Some(Commands::Debug(_)) => {}
         None => {
