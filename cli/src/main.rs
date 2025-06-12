@@ -28,7 +28,9 @@ fn main() {
     }
 
     match &cli.command {
-        Some(Commands::Init { app_name, owner }) => init::handle_command(app_name, owner),
+        Some(Commands::Init { app_name, owner }) => {
+            wrap_error(init::handle_command(app_name, owner))
+        }
         Some(Commands::Update { version }) => {}
         Some(Commands::Config { edit, overwrite }) => {
             wrap_error(config::handle_command(edit, overwrite, None))
