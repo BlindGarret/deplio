@@ -18,3 +18,4 @@ target/
 
 .DS_Store
 .aider*
+tarpaulin-report.*
