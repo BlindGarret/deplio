@@ -5,6 +5,8 @@ mod versioning;
 
 #[cfg(test)]
 mod versioning_tests;
+#[cfg(test)]
+mod templates_tests;
 
 pub use self::templates::*;
 pub use self::traits::*;
