@@ -1,0 +1,30 @@
+### Application Configuration File ###
+# This file is used to configure the application settings.
+# The configuration file is in TOML format.
+# You can find the documentation for TOML here: https://toml.io/en/
+# The configuration file is divided into sections, each section is defined by a header.
+# The sections are:
+# [deplio] - Deplio tool configurations
+# [server] - Server configuration
+# [app] - Application configuration
+
+[deplio]
+version = "{{version}}"
+
+[server]
+### The host name for the deplio server to use for deployment functionality.
+deplio_server = "{{deplio_server}}"
+owner = "{{owner}}"
+
+[app]
+### The name of the application.
+name = "{{app_name}}"
+
+### the list of chart urls to deploy with this application.
+# chart objects are defined in the format:
+# { name = "chart_name", url = "chart_url", namespace = "chart_namespace" }
+charts = []
+
+### The SDLC to use for this application.
+sdlc = "default"
+
