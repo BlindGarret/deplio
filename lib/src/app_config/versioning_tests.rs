@@ -40,34 +40,49 @@ mod tests {
     fn test_upgrade_data_invalid_from_version() {
         let result = upgrade_data("invalid-version", "1.0.0", "test-data", None);
         assert!(result.is_err());
-        assert!(result.unwrap_err().contains("Invalid from_version"));
+        match result.unwrap_err() {
+            super::super::versioning::UpgradeError::InvalidVersionFormat(msg) => {
+                assert!(msg.contains("Invalid from_version"));
+            }
+            _ => panic!("Expected InvalidVersionFormat error"),
+        }
     }
 
     #[test]
     fn test_upgrade_data_invalid_to_version() {
         let result = upgrade_data("1.0.0", "invalid-version", "test-data", None);
         assert!(result.is_err());
-        assert!(result.unwrap_err().contains("Invalid to_version"));
+        match result.unwrap_err() {
+            super::super::versioning::UpgradeError::InvalidVersionFormat(msg) => {
+                assert!(msg.contains("Invalid to_version"));
+            }
+            _ => panic!("Expected InvalidVersionFormat error"),
+        }
     }
 
     #[test]
     fn test_upgrade_data_from_version_greater_than_to_version() {
         let result = upgrade_data("2.0.0", "1.0.0", "test-data", None);
         assert!(result.is_err());
-        let error_msg = result.unwrap_err();
-        assert!(error_msg.contains("Cannot upgrade from version 2.0.0 to 1.0.0"));
-        assert!(error_msg.contains("from_version must be less than or equal to to_version"));
+        match result.unwrap_err() {
+            super::super::versioning::UpgradeError::DowngradeNotSupported { from, to } => {
+                assert_eq!(from, "2.0.0");
+                assert_eq!(to, "1.0.0");
+            }
+            _ => panic!("Expected DowngradeNotSupported error"),
+        }
     }
 
     #[test]
     fn test_upgrade_data_unsupported_target_version() {
         let result = upgrade_data("1.0.0", "90000.0.0", "test-data", None);
         assert!(result.is_err());
-        assert!(
-            result
-                .unwrap_err()
-                .contains("Target version 90000.0.0 is not supported")
-        );
+        match result.unwrap_err() {
+            super::super::versioning::UpgradeError::UnsupportedTargetVersion(version) => {
+                assert_eq!(version, "90000.0.0");
+            }
+            _ => panic!("Expected UnsupportedTargetVersion error"),
+        }
     }
 
     #[test]
@@ -89,14 +104,24 @@ mod tests {
     fn test_upgrade_data_version_with_leading_v() {
         let result = upgrade_data("v1.0.0", "1.0.0", "test-data", None);
         assert!(result.is_err());
-        assert!(result.unwrap_err().contains("Invalid from_version"));
+        match result.unwrap_err() {
+            super::super::versioning::UpgradeError::InvalidVersionFormat(msg) => {
+                assert!(msg.contains("Invalid from_version"));
+            }
+            _ => panic!("Expected InvalidVersionFormat error"),
+        }
     }
 
     #[test]
     fn test_upgrade_data_version_with_spaces() {
         let result = upgrade_data(" 1.0.0 ", "1.0.0", "test-data", None);
         assert!(result.is_err());
-        assert!(result.unwrap_err().contains("Invalid from_version"));
+        match result.unwrap_err() {
+            super::super::versioning::UpgradeError::InvalidVersionFormat(msg) => {
+                assert!(msg.contains("Invalid from_version"));
+            }
+            _ => panic!("Expected InvalidVersionFormat error"),
+        }
     }
 
     #[test]
@@ -161,9 +186,14 @@ mod tests {
 
         let result = upgrade_data("1.0.0", "2.0.0", "test-data", Some(upgraders));
         assert!(result.is_err());
-        let error_msg = result.unwrap_err();
-        assert!(error_msg.contains("Cannot upgrade from version 1.0.0 to 2.0.0"));
-        assert!(error_msg.contains("This is a breaking change"));
+        match result.unwrap_err() {
+            super::super::versioning::UpgradeError::BreakingChange { from, to, message } => {
+                assert_eq!(from, "1.0.0");
+                assert_eq!(to, "2.0.0");
+                assert_eq!(message, "This is a breaking change");
+            }
+            _ => panic!("Expected BreakingChange error"),
+        }
     }
 
     #[test]
@@ -201,9 +231,12 @@ mod tests {
         let result = upgrade_data("1.0.0", "1.1.0", "test-data", Some(upgraders));
         assert!(result.is_err());
         // Should fail since no upgrader can handle 1.0.0 to reach target 1.1.0
-        assert!(result.unwrap_err().contains(
-            "Could not upgrade to target version 1.1.0: no applicable upgrade route found"
-        ));
+        match result.unwrap_err() {
+            super::super::versioning::UpgradeError::NoRouteFound(version) => {
+                assert_eq!(version, "1.1.0");
+            }
+            _ => panic!("Expected NoRouteFound error"),
+        }
     }
 
     #[test]
@@ -219,11 +252,12 @@ mod tests {
         // Target version 1.2.0 is not available in upgraders
         let result = upgrade_data("1.0.0", "1.2.0", "test-data", Some(upgraders));
         assert!(result.is_err());
-        assert!(
-            result
-                .unwrap_err()
-                .contains("Target version 1.2.0 is not supported")
-        );
+        match result.unwrap_err() {
+            super::super::versioning::UpgradeError::UnsupportedTargetVersion(version) => {
+                assert_eq!(version, "1.2.0");
+            }
+            _ => panic!("Expected UnsupportedTargetVersion error"),
+        }
     }
 
     #[test]
@@ -232,11 +266,12 @@ mod tests {
 
         let result = upgrade_data("1.0.0", "1.1.0", "test-data", Some(upgraders));
         assert!(result.is_err());
-        assert!(
-            result
-                .unwrap_err()
-                .contains("Target version 1.1.0 is not supported")
-        );
+        match result.unwrap_err() {
+            super::super::versioning::UpgradeError::UnsupportedTargetVersion(version) => {
+                assert_eq!(version, "1.1.0");
+            }
+            _ => panic!("Expected UnsupportedTargetVersion error"),
+        }
     }
 
     #[test]
@@ -363,9 +398,12 @@ mod tests {
         // Should fail because there's no upgrade path from 1.1.0 to 1.3.0
         let result = upgrade_data("1.0.0", "1.3.0", "data", Some(upgraders));
         assert!(result.is_err());
-        assert!(result.unwrap_err().contains(
-            "Could not upgrade to target version 1.3.0: no applicable upgrade route found"
-        ));
+        match result.unwrap_err() {
+            super::super::versioning::UpgradeError::NoRouteFound(version) => {
+                assert_eq!(version, "1.3.0");
+            }
+            _ => panic!("Expected NoRouteFound error"),
+        }
     }
 
     #[test]
@@ -416,8 +454,11 @@ mod tests {
         // Should fail because we can't get from 1.1.0 to 1.2.0
         let result = upgrade_data("1.0.0", "1.3.0", "data", Some(upgraders));
         assert!(result.is_err());
-        assert!(result.unwrap_err().contains(
-            "Could not upgrade to target version 1.3.0: no applicable upgrade route found"
-        ));
+        match result.unwrap_err() {
+            super::super::versioning::UpgradeError::NoRouteFound(version) => {
+                assert_eq!(version, "1.3.0");
+            }
+            _ => panic!("Expected NoRouteFound error"),
+        }
     }
 }

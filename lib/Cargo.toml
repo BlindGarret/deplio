@@ -6,3 +6,6 @@ edition = "2024"
 [dependencies]
 semver = "1.0.26"
 toml = "0.8.20"
+serde = { version = "1.0.219", features = ["derive"] }
+thiserror = "2.0.12"
+regex = { version = "1.11.1", features = ["unicode"] }

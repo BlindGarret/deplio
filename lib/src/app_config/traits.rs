@@ -1,3 +1,4 @@
+/// Upgrader trait for handling data version upgrades between config file versions.
 pub trait Upgrader: Sync {
     /// Upgrades the given data from an old version to a new version.
     fn upgrade(&self, data: &str) -> String;
